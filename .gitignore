@@ -1,0 +1,5 @@
+backend/node_modules
+backend/.env
+auth/node_modules
+auth/.env
+.DS_Store

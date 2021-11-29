@@ -1,0 +1,60 @@
+version: "3.9"
+services:
+  db:
+    container_name: fintech_db
+    image: postgres
+    env_file:
+      - ./backend/.env
+    volumes:
+      - "/var/lib/postgresql"
+    ports:
+      - "5432"
+    networks:
+      - app-network
+
+  backend:
+    container_name: fintech_backend
+    build: ./backend
+    command: bash -c "yarn sequelize db:migrate && yarn sequelize db:seed:all && yarn start"
+    volumes:
+      - ./backend:/backend
+      - /backend/node_modules
+    networks:
+      - app-network
+    env_file:
+      - ./backend/.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+
+  auth:
+    container_name: fintech_auth_backend
+    build: ./auth
+    command: bash -c "yarn start"
+    volumes:
+      - ./auth:/auth
+      - /auth/node_modules
+    networks:
+      - app-network
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
